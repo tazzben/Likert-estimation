@@ -41,5 +41,26 @@ def objective_function(params, data, cjLength):
     
     return -np.sum(formulaPosArray)
 
-def solver(pdData):
+def solver(pdData, columns = None):
+    if not columns:
+        columns = pdData.columns[2:]        
+    pdData['question_id'], unique_questions = pdData['question'].factorize()
+    cjLength = len(unique_questions)
+    betaLength = len(columns)
+
+    numpyArray = np.hstack((
+        pdData[['k', 'question_id']].to_numpy(),
+        pdData[columns].to_numpy()
+    ))
+
+    # Initial guess for the parameters
+    initial_guess = np.array((1 / (2 * pdData['k'].mean()),) * (cjLength + betaLength), np.dtype(float))
+    
+    # Minimize the objective function
+    minimum = minimize(
+        objective_function, 
+        initial_guess, 
+        args=(numpyArray, cjLength), 
+        method='Powell'
+    )
     
