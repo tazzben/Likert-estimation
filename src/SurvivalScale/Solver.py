@@ -1,11 +1,7 @@
-from multiprocessing import Pool
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
-from scipy.stats import percentileofscore
-from scipy.stats.distributions import chi2
-from scipy.special import expit, xlog1py, xlogy
-from tqdm import tqdm
+from scipy.special import expit, xlogy
 from numba import njit
 
 
@@ -28,17 +24,13 @@ def _oneExpitRow(row_data):
 
 def objective_function(params, data, cjLength):
     projectionsData = np.apply_along_axis(lambda row_data: _oneRow(params, row_data, cjLength), 1, data)
-    
     cleanedExpitProjections = np.hstack((projectionsData[:, [2, 3]], expit(projectionsData[:, [0, 1]])))
-        
     formulaPosArray = np.apply_along_axis(lambda row_data: _oneExpitRow(row_data), 1, cleanedExpitProjections)
-    
     formulaPosArray = np.hstack((
         np.log(formulaPosArray[:, [0, 1]]),
         xlogy(formulaPosArray[:, 2], formulaPosArray[:, 3]).reshape(-1, 1),
         np.log(formulaPosArray[:, 4]).reshape(-1, 1)
     ))
-    
     return -np.sum(formulaPosArray)
 
 def solver(pdData, columns = None):
@@ -54,13 +46,23 @@ def solver(pdData, columns = None):
     ))
 
     # Initial guess for the parameters
-    initial_guess = np.array((1 / (2 * pdData['k'].mean()),) * (cjLength + betaLength), np.dtype(float))
-    
+    initial_guess = np.array((1 / (2 * pdData['k'].mean()),) * (cjLength + betaLength), np.dtype(float))   
     # Minimize the objective function
     minimum = minimize(
-        objective_function, 
-        initial_guess, 
-        args=(numpyArray, cjLength), 
+        objective_function,
+        initial_guess,
+        args=(numpyArray, cjLength),
         method='Powell'
     )
-    
+    if not minimum.success:
+        raise Exception('The optimization did not converge')
+
+    solvedParams = minimum.x.flatten().tolist()
+    solvedCj = solvedParams[:cjLength]
+    cjDataframe = pdData[['question_id', 'question']].drop_duplicates()
+    cjDataframe['Cj'] = cjDataframe['question_id'].apply(lambda qid: solvedCj[qid])
+    cjDataframe.set_index('question', inplace=True)
+    solvedBeta = solvedParams[cjLength:]
+    betaDataframe = pd.DataFrame(solvedBeta, columns=['beta'], index=columns)
+    return cjDataframe['Cj'], betaDataframe
+
