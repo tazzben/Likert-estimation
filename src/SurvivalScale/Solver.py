@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
-from scipy.special import expit, xlogy
+from scipy.special import expit, xlogy # pylint: disable = no-name-in-module
 from numba import njit
 
 
@@ -35,7 +35,7 @@ def objective_function(params, data, cjLength):
 
 def solver(pdData, columns = None):
     if not columns:
-        columns = pdData.columns[2:]        
+        columns = pdData.columns[2:]
     pdData['question_id'], unique_questions = pdData['question'].factorize()
     cjLength = len(unique_questions)
     betaLength = len(columns)
@@ -46,7 +46,7 @@ def solver(pdData, columns = None):
     ))
 
     # Initial guess for the parameters
-    initial_guess = np.array((1 / (2 * pdData['k'].mean()),) * (cjLength + betaLength), np.dtype(float))   
+    initial_guess = np.array((1 / (2 * pdData['k'].mean()),) * (cjLength + betaLength), np.dtype(float))
     # Minimize the objective function
     minimum = minimize(
         objective_function,
@@ -65,4 +65,3 @@ def solver(pdData, columns = None):
     solvedBeta = solvedParams[cjLength:]
     betaDataframe = pd.DataFrame(solvedBeta, columns=['beta'], index=columns)
     return cjDataframe['Cj'], betaDataframe
-
