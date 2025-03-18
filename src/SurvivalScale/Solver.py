@@ -5,16 +5,16 @@ from scipy.special import expit, xlogy # pylint: disable = no-name-in-module
 from numba import njit
 
 
-@njit
+#@njit
 def _oneRow(params, row_data, cjLength):
-    row_identifier = row_data[2]
+    row_identifier = row_data[1]
     cj = params[row_identifier]
-    row_dataX = row_data[3:]
+    row_dataX = row_data[2:]
     betaParams = params[cjLength:]
     projection = np.dot(row_dataX, betaParams)
     return [projection + cj, projection, row_data[0], row_data[1]]
 
-@njit
+#@njit
 def _oneExpitRow(row_data):
     firstPos = row_data[2] if row_data[0] == 0 else 1
     secondPos = 1 if row_data[0] == 0 else 1 - row_data[2]
@@ -65,3 +65,18 @@ def solver(pdData, columns = None):
     solvedBeta = solvedParams[cjLength:]
     betaDataframe = pd.DataFrame(solvedBeta, columns=['beta'], index=columns)
     return cjDataframe['Cj'], betaDataframe
+
+
+def testFunction():
+    data = pd.DataFrame({
+        'k': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'question': ['q1', 'q1', 'q1', 'q1', 'q1', 'q2', 'q2', 'q2', 'q2', 'q2'],
+        'feature1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'feature2': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
+    })
+    cj, beta = solver(data, columns=['feature1', 'feature2'])
+    print(cj)
+    print(beta)
+
+if __name__ == '__main__':
+    testFunction()
