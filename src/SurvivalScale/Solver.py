@@ -5,21 +5,21 @@ from scipy.special import expit, xlogy # pylint: disable = no-name-in-module
 from numba import njit
 
 
-#@njit
+@njit
 def _oneRow(params, row_data, cjLength):
     row_identifier = row_data[1]
     cj = params[row_identifier]
-    row_dataX = row_data[2:]
+    row_dataX = row_data[3:].astype(np.float64)
     betaParams = params[cjLength:]
     projection = np.dot(row_dataX, betaParams)
     return [projection + cj, projection, row_data[0], row_data[1]]
 
-#@njit
+@njit
 def _oneExpitRow(row_data):
     firstPos = row_data[2] if row_data[0] == 0 else 1
     secondPos = 1 if row_data[0] == 0 else 1 - row_data[2]
     thirdPos = 1 if row_data[0] == 0 else 1 - row_data[3]
-    fourthPos = 1 if row_data[0] in (0, row_data[1]) else row_data[3]
+    fourthPos = 1 if row_data[0] in (0.0, row_data[1]) else row_data[3]
     return [ firstPos, secondPos, row_data[0] - 1, thirdPos, fourthPos ]
 
 def objective_function(params, data, cjLength):
@@ -27,9 +27,9 @@ def objective_function(params, data, cjLength):
     cleanedExpitProjections = np.hstack((projectionsData[:, [2, 3]], expit(projectionsData[:, [0, 1]])))
     formulaPosArray = np.apply_along_axis(lambda row_data: _oneExpitRow(row_data), 1, cleanedExpitProjections)
     formulaPosArray = np.hstack((
-        np.log(formulaPosArray[:, [0, 1]]),
+        xlogy(1, formulaPosArray[:, [0, 1]]),
         xlogy(formulaPosArray[:, 2], formulaPosArray[:, 3]).reshape(-1, 1),
-        np.log(formulaPosArray[:, 4]).reshape(-1, 1)
+        xlogy(1, formulaPosArray[:, 4]).reshape(-1, 1)
     ))
     return -np.sum(formulaPosArray)
 
@@ -41,7 +41,7 @@ def solver(pdData, columns = None):
     betaLength = len(columns)
 
     numpyArray = np.hstack((
-        pdData[['k', 'question_id']].to_numpy(),
+        pdData[['k', 'question_id', 'bound']].to_numpy(),
         pdData[columns].to_numpy()
     ))
 
@@ -71,6 +71,7 @@ def testFunction():
     data = pd.DataFrame({
         'k': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         'question': ['q1', 'q1', 'q1', 'q1', 'q1', 'q2', 'q2', 'q2', 'q2', 'q2'],
+        'bound': [4, 4, 4, 4, 4, 10, 10, 10, 10, 10],
         'feature1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         'feature2': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
     })
