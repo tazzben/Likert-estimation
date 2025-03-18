@@ -12,14 +12,14 @@ def _oneRow(params, row_data, cjLength):
     row_dataX = row_data[3:].astype(np.float64)
     betaParams = params[cjLength:]
     projection = np.dot(row_dataX, betaParams)
-    return [projection + cj, projection, row_data[0], row_data[1]]
+    return [projection + cj, projection, row_data[0], row_data[2]]
 
 @njit
 def _oneExpitRow(row_data):
     firstPos = row_data[2] if row_data[0] == 0 else 1
     secondPos = 1 if row_data[0] == 0 else 1 - row_data[2]
     thirdPos = 1 if row_data[0] == 0 else 1 - row_data[3]
-    fourthPos = 1 if row_data[0] in (0.0, row_data[1]) else row_data[3]
+    fourthPos = 1 if row_data[0] in (0, int(row_data[1])) else row_data[3]
     return [ firstPos, secondPos, row_data[0] - 1, thirdPos, fourthPos ]
 
 def objective_function(params, data, cjLength):
@@ -69,9 +69,9 @@ def solver(pdData, columns = None):
 
 def testFunction():
     data = pd.DataFrame({
-        'k': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        'k': [0, 1, 2, 3, 4, 0, 1, 2, 8, 9],
         'question': ['q1', 'q1', 'q1', 'q1', 'q1', 'q2', 'q2', 'q2', 'q2', 'q2'],
-        'bound': [4, 4, 4, 4, 4, 10, 10, 10, 10, 10],
+        'bound': [4, 4, 4, 4, 4, 9, 9, 9, 9, 9],
         'feature1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
         'feature2': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
     })
