@@ -35,7 +35,7 @@ def objective_function(params, data, cjLength):
 
 def solver(pdData, columns = None):
     if not columns:
-        columns = pdData.columns[2:]
+        columns = pdData.columns[3:]
     pdData['question_id'], unique_questions = pdData['question'].factorize()
     cjLength = len(unique_questions)
     betaLength = len(columns)
