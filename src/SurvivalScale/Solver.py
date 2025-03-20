@@ -25,7 +25,7 @@ def _oneExpitRow(row_data):
 def objective_function(params, data, cjLength):
     projectionsData = np.apply_along_axis(lambda row_data: _oneRow(params, row_data, cjLength), 1, data)
     cleanedExpitProjections = np.hstack((projectionsData[:, [2, 3]], expit(projectionsData[:, [0, 1]])))
-    formulaPosArray = np.apply_along_axis(lambda row_data: _oneExpitRow(row_data), 1, cleanedExpitProjections)
+    formulaPosArray = np.apply_along_axis(_oneExpitRow, 1, cleanedExpitProjections)
     formulaPosArray = np.hstack((
         xlogy(1, formulaPosArray[:, [0, 1]]),
         xlogy(formulaPosArray[:, 2], formulaPosArray[:, 3]).reshape(-1, 1),
@@ -55,7 +55,7 @@ def solver(pdData, columns = None):
         method='Powell'
     )
     if not minimum.success:
-        raise Exception('The optimization did not converge')
+        raise ValueError('The optimization did not converge')
 
     solvedParams = minimum.x.flatten().tolist()
     solvedCj = solvedParams[:cjLength]
