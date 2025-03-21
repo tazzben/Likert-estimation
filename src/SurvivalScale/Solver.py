@@ -64,20 +64,5 @@ def solver(pdData, columns = None):
     cjDataframe.set_index('question', inplace=True)
     solvedBeta = solvedParams[cjLength:]
     betaDataframe = pd.DataFrame(solvedBeta, columns=['beta'], index=columns)
-    return cjDataframe['Cj'], betaDataframe
+    return cjDataframe['Cj'], betaDataframe, -minimum.fun
 
-
-def testFunction():
-    data = pd.DataFrame({
-        'k': [0, 1, 2, 3, 4, 0, 1, 2, 8, 9],
-        'question': ['q1', 'q1', 'q1', 'q1', 'q1', 'q2', 'q2', 'q2', 'q2', 'q2'],
-        'bound': [4, 4, 4, 4, 4, 9, 9, 9, 9, 9],
-        'feature1': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        'feature2': [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
-    })
-    cj, beta = solver(data, columns=['feature1', 'feature2'])
-    print(cj)
-    print(beta)
-
-if __name__ == '__main__':
-    testFunction()
