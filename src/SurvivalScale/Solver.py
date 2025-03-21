@@ -5,7 +5,7 @@ from scipy.special import expit, xlogy # pylint: disable = no-name-in-module
 from numba import njit
 
 
-@njit
+#@njit
 def _oneRow(params, row_data, cjLength):
     row_identifier = row_data[1]
     cj = params[row_identifier]
@@ -14,7 +14,7 @@ def _oneRow(params, row_data, cjLength):
     projection = np.dot(row_dataX, betaParams)
     return [projection + cj, projection, row_data[0], row_data[2]]
 
-@njit
+#@njit
 def _oneExpitRow(row_data):
     firstPos = row_data[2] if row_data[0] == 0 else 1
     secondPos = 1 if row_data[0] == 0 else 1 - row_data[2]
@@ -66,3 +66,7 @@ def solver(pdData, columns = None):
     betaDataframe = pd.DataFrame(solvedBeta, columns=['beta'], index=columns)
     return cjDataframe['Cj'], betaDataframe, -minimum.fun
 
+def restricted_solver(pdData):
+    data = pdData[['k', 'question', 'bound']].copy()
+    data['question'] = 1
+    return solver(data)

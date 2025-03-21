@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
-from .Solver import solver
+from .Solver import solver, restricted_solver
 from .Marginal import marginalize_df
 from .Bootstrap import bootstrap
+from scipy.stats.distributions import chi2
 
 def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05):
     """
@@ -38,4 +39,16 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05):
     bootstrap_results = bootstrap_results.set_index('variable')
     results = results.join(bootstrap_results, how='inner')
     cj = cj.to_frame().join(cjbootstrap, how='inner')
-    return cj, results
+
+
+    # Calculate McFadden pseudo R-squared
+    _, _, restrictedFun = restricted_solver(data)
+
+    metrics = {
+        'mcfadden_r2': 1 - (fun / restrictedFun),
+        'log_likelihood': fun,
+        'restricted_log_likelihood': restrictedFun,
+        'LR': 2 * (restrictedFun - fun)
+    }
+
+    return cj, results, metrics
