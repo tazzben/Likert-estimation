@@ -22,7 +22,7 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05):
         columns = [col for col in data.columns if col not in ['k', 'question', 'bound']]
     
     # Solve the model
-    cj, beta, fun = solver(data, columns=columns)
+    cj, beta, fun, parlen = solver(data, columns=columns)
     
     # Marginalize the results
     marginals = marginalize_df(data, beta, columns=columns, discrete=False)
@@ -42,13 +42,18 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05):
 
 
     # Calculate McFadden pseudo R-squared
-    _, _, restrictedFun = restricted_solver(data)
+    restrictedFun = restricted_solver(data)
 
     metrics = {
         'mcfadden_r2': 1 - (fun / restrictedFun),
         'log_likelihood': fun,
         'restricted_log_likelihood': restrictedFun,
-        'LR': 2 * (restrictedFun - fun)
+        'LR': -2 * (restrictedFun - fun)
     }
+
+    metrics['num_rows'] = data.shape[0]
+    metrics['Chi-Squared'] = chi2.sf(metrics['LR'], (parlen - 1))
+    metrics['AIC'] = 2*(parlen)-2*fun
+    metrics['BIC'] = (parlen) * np.log(metrics['num_rows'])-2*fun
 
     return cj, results, metrics

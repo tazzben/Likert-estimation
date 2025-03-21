@@ -15,7 +15,7 @@ def bootstrap_iteration(tup):
         sample_data = pd.concat([pdData[pdData[block_id] == block] for block in sampled_blocks])
     sample_data = sample_data.reset_index(drop=True)
     cols = [col for col in columns if sample_data[col].sum() != 0]
-    cjResults, solvedParams, _ = solver(sample_data, cols)
+    cjResults, solvedParams, _, _ = solver(sample_data, cols)
     cjResults = cjResults.reset_index()
     solvedParams = solvedParams.reset_index()
     return cjResults, solvedParams

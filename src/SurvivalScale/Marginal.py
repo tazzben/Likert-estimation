@@ -7,17 +7,20 @@ def marginal_func(beta, xrow, beta_position):
     marginal = beta[beta_position] * expit(projection) * (1 - expit(projection))
     return marginal
 
-def discrete_marginal_func(beta, xrow, beta_position):
+def discrete_marginal_func(beta, xrow, beta_position, binary = False):
     newBeta = beta.copy()
     newBeta[beta_position] = 0
     projection0 = np.dot(newBeta, xrow)
     projection1 = np.dot(beta, xrow)
-    marginal = (expit(projection1) - expit(projection0))
+    div = 1 if binary else xrow[beta_position]
+    marginal = (expit(projection1) - expit(projection0)) / div
     return marginal
 
 def marginalize(xrow, beta, beta_position, discrete=False):
     if discrete:
-        return np.array([discrete_marginal_func(beta, xrow[i], beta_position) for i in range(len(xrow))]).mean()
+        testColumn = xrow[:, beta_position]
+        binary = True if np.all(np.isin(testColumn, [0, 1])) else False
+        return np.array([discrete_marginal_func(beta, xrow[i], beta_position, binary) for i in range(len(xrow))]).mean()
     return np.array([marginal_func(beta, xrow[i], beta_position) for i in range(len(xrow))]).mean()
 
 def marginalize_df(df, beta, columns, discrete=False):
