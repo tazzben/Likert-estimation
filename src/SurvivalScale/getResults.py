@@ -1,10 +1,10 @@
 import numpy as np
+from scipy.stats.distributions import chi2
 from .Solver import solver, restricted_solver
 from .Marginal import marginalize_df
 from .Bootstrap import bootstrap
-from scipy.stats.distributions import chi2
 
-def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05):
+def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block_id=None):
     """
     Get the results of the SurvivalScale analysis.
 
@@ -18,24 +18,19 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05):
     - pd.DataFrame: variable-level results (beta values and their marginals).
     - dict: metrics including McFadden pseudo R-squared, log-likelihood, AIC, BIC, etc.
     """
-    
     if columns is None:
         columns = [col for col in data.columns if col not in ['k', 'question', 'bound']]
-    
     # Solve the model
     cj, beta, fun, parlen = solver(data, columns=columns)
-    
     # Marginalize the results
     marginals = marginalize_df(data, beta, columns=columns, discrete=False)
     marginalD = marginalize_df(data, beta, columns=columns, discrete=True)
-
     # Merge beta and marginals on key
     results = beta.join(marginals, how='inner')
     marginalD = marginalD.rename(columns={'marginal': 'marginal_discrete'})
     results = results.join(marginalD, how='inner')
-    
     # Perform bootstrap analysis
-    cjbootstrap, bootstrap_results = bootstrap(data, n_bootstraps=bootstrap_iterations, alpha=alpha, columns=columns)
+    cjbootstrap, bootstrap_results = bootstrap(data, n_bootstraps=bootstrap_iterations, alpha=alpha, columns=columns, block_id=block_id)
     cjbootstrap = cjbootstrap.set_index('question')
     bootstrap_results = bootstrap_results.set_index('variable')
     results = results.join(bootstrap_results, how='inner')
