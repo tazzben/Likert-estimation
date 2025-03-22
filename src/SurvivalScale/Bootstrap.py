@@ -40,13 +40,12 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
 
     for question in unique_questions:
         question_mask = cj_results['question'] == question
-        mean_cj = cj_results[question_mask]['Cj'].mean()
+        median_cj = cj_results[question_mask]['Cj'].median()
         lower_bound = cj_results[question_mask]['Cj'].quantile(alpha / 2)
         upper_bound = cj_results[question_mask]['Cj'].quantile(1 - alpha / 2)
-        p_value = ((cj_results[question_mask]['Cj'] < 0).sum()) / (len(cj_results[question_mask]['Cj'])) if mean_cj > 0 else ((cj_results[question_mask]['Cj'] > 0).sum()) / (len(cj_results[question_mask]['Cj']))
+        p_value = ((cj_results[question_mask]['Cj'] < 0).sum()) / (len(cj_results[question_mask]['Cj'])) if median_cj > 0 else ((cj_results[question_mask]['Cj'] > 0).sum()) / (len(cj_results[question_mask]['Cj']))
         cj_list.append({
             'question': question,
-            'mean': mean_cj,
             'lower_bound': lower_bound,
             'upper_bound': upper_bound,
             'p_value': p_value
@@ -54,13 +53,12 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
 
     for col in columns:
         col_mask = beta_results['index'] == col
-        mean_beta = beta_results[col_mask]['beta'].mean()
+        median_beta = beta_results[col_mask]['beta'].median()
         lower_bound = beta_results[col_mask]['beta'].quantile(alpha / 2)
         upper_bound = beta_results[col_mask]['beta'].quantile(1 - alpha / 2)
-        p_value = ((beta_results[col_mask]['beta'] < 0).sum()) / (len(beta_results[col_mask]['beta'])) if mean_beta > 0 else ((beta_results[col_mask]['beta'] > 0).sum()) / (len(beta_results[col_mask]['beta']))
+        p_value = ((beta_results[col_mask]['beta'] < 0).sum()) / (len(beta_results[col_mask]['beta'])) if median_beta > 0 else ((beta_results[col_mask]['beta'] > 0).sum()) / (len(beta_results[col_mask]['beta']))
         beta_list.append({
             'variable': col,
-            'mean': mean_beta,
             'lower_bound': lower_bound,
             'upper_bound': upper_bound,
             'p_value': p_value

@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from .Solver import solver, restricted_solver
 from .Marginal import marginalize_df
 from .Bootstrap import bootstrap
@@ -15,7 +14,9 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05):
                                  If None, all columns except 'k', 'question', 'bound' will be used.
 
     Returns:
-    - pd.DataFrame: A DataFrame containing the results of the analysis.
+    - pd.DataFrame: question-level results (Cj values).
+    - pd.DataFrame: variable-level results (beta values and their marginals).
+    - dict: metrics including McFadden pseudo R-squared, log-likelihood, AIC, BIC, etc.
     """
     
     if columns is None:
@@ -45,14 +46,14 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05):
     restrictedFun = restricted_solver(data)
 
     metrics = {
-        'mcfadden_r2': 1 - (fun / restrictedFun),
+        'McFadden_R2': 1 - (fun / restrictedFun),
         'log_likelihood': fun,
         'restricted_log_likelihood': restrictedFun,
         'LR': -2 * (restrictedFun - fun)
     }
 
     metrics['num_rows'] = data.shape[0]
-    metrics['Chi-Squared'] = chi2.sf(metrics['LR'], (parlen - 1))
+    metrics['Chi-Squared_p-value'] = chi2.sf(metrics['LR'], (parlen - 1))
     metrics['AIC'] = 2*(parlen)-2*fun
     metrics['BIC'] = (parlen) * np.log(metrics['num_rows'])-2*fun
 

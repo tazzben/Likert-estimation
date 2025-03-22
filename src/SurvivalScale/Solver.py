@@ -24,14 +24,14 @@ def _oneExpitRow(row_data):
 
 def objective_function(params, data, cjLength):
     projectionsData = np.apply_along_axis(lambda row_data: _oneRow(params, row_data, cjLength), 1, data)
+    projectionsData = np.array(projectionsData, dtype=np.float64)
     cleanedExpitProjections = np.hstack((projectionsData[:, [2, 3]], expit(projectionsData[:, [0, 1]])))
     formulaPosArray = np.apply_along_axis(_oneExpitRow, 1, cleanedExpitProjections)
     formulaPosArray = np.hstack((
-        xlogy(1, formulaPosArray[:, [0, 1]]),
-        xlogy(formulaPosArray[:, 2], formulaPosArray[:, 3]).reshape(-1, 1),
-        xlogy(1, formulaPosArray[:, 4]).reshape(-1, 1)
+        xlogy(1, formulaPosArray[:, [0, 1, 4]]),
+        xlogy(formulaPosArray[:, 2], formulaPosArray[:, 3]).reshape(-1, 1)
     ))
-    return -np.sum(formulaPosArray)
+    return -np.sum(formulaPosArray, dtype=np.float64)
 
 def solver(pdData, columns = None):
     if not columns:
