@@ -16,11 +16,14 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     - data (pd.DataFrame): The input data containing the features and other necessary columns.
     - columns (list, optional): The list of feature columns to be used in the analysis. 
                                  If None, all columns except 'k', 'question', 'bound' will be used.
+    - bootstrap_iterations (int, optional): The number of bootstrap iterations to perform. Default is 1000.
+    - alpha (float, optional): The significance level for the bootstrap confidence intervals. Default is 0.05.
+    - block_id (str, optional): The column name to use for blocking in the bootstrap analysis. Default is None.
 
     Returns:
     - pd.DataFrame: question-level results (Cj values).
     - pd.DataFrame: variable-level results (beta values and their marginals).
-    - dict: metrics including McFadden pseudo R-squared, log-likelihood, AIC, BIC, etc.
+    - pd.DataFrame: metrics including McFadden pseudo R-squared, log-likelihood, AIC, BIC, etc. as keys in a DataFrame.
     """
     if columns is None:
         columns = [col for col in data.columns if col not in ['k', 'question', 'bound']]
@@ -34,6 +37,9 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     for col in columns:
         if col not in data.columns:
             raise ValueError(f"Specified column '{col}' is not in the data")
+    # Check if block_id is in the data if provided
+    if block_id is not None and block_id not in data.columns:
+        raise ValueError(f"Specified block_id '{block_id}' is not in the data")
     # Preprocess the data
     # Drop rows with NaN values
     # Convert 'k' and 'bound' to numeric, ensuring they are valid integers
@@ -51,6 +57,7 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
         raise ValueError("No valid data left after preprocessing. Please check your input data.")
     # Solve the model
     cj, beta, fun, parlen = solver(data, columns=columns)
+    cj.index.name = None
     # Marginalize the results
     marginals = marginalize_df(data, beta, columns=columns, discrete=False)
     marginalD = marginalize_df(data, beta, columns=columns, discrete=True)
@@ -83,4 +90,9 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     metrics['Chi-Squared_p-value'] = chi2.sf(metrics['LR'], (parlen - 1))
     metrics['AIC'] = 2*(parlen)-2*fun
     metrics['BIC'] = (parlen) * np.log(metrics['num_rows'])-2*fun
-    return cj, results, metrics
+
+    # Create a clean pandas DataFrame from metrics
+    metrics_df = pd.DataFrame(list(metrics.items()), columns=['Metric', 'Value'])
+    metrics_df.set_index('Metric', inplace=True, drop=True)
+    metrics_df.index.name = None
+    return cj, results, metrics_df
