@@ -59,8 +59,8 @@ def solver(pdData, columns = None):
 
     solvedParams = minimum.x.flatten().tolist()
     solvedCj = solvedParams[:cjLength]
-    cjDataframe = pdData[['question_id', 'question']].drop_duplicates()
-    cjDataframe['Cj'] = cjDataframe['question_id'].apply(lambda qid: solvedCj[qid])
+    cjDataframe = pdData[['question_id', 'question']].drop_duplicates().copy()
+    cjDataframe.loc[:,'Cj'] = cjDataframe['question_id'].apply(lambda qid: solvedCj[qid])
     cjDataframe.set_index('question', inplace=True)
     solvedBeta = solvedParams[cjLength:]
     betaDataframe = pd.DataFrame(solvedBeta, columns=['beta'], index=columns)
