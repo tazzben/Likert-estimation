@@ -32,6 +32,9 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     for col in required_columns:
         if col not in data.columns:
             raise ValueError(f"Data must contain the column '{col}'")
+    
+    # Ensure 'k', 'question', and 'bound' are the first three columns
+    data = data[['k', 'question', 'bound'] + [col for col in data.columns if col not in ['k', 'question', 'bound']]]
 
     # Check if the specified columns are in the data
     for col in columns:
