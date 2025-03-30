@@ -7,7 +7,7 @@ from numba import njit
 
 @njit
 def _oneRow(params, row_data, cjLength):
-    row_identifier = row_data[1]
+    row_identifier = int(row_data[1])
     cj = params[row_identifier]
     row_dataX = row_data[3:].astype(np.float64)
     betaParams = params[cjLength:]
