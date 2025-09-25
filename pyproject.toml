@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "SurvivalScale"
-version = "0.0.3"
+version = "0.0.4"
 description = "Package to compute survival scale estimates."
 license = "MIT"
 authors = [
