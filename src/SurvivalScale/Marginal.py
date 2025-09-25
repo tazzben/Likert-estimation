@@ -12,14 +12,17 @@ def marginal_func(beta, xrow, beta_position, adder = 0, multiplierOverride = Non
     return marginal
 
 def discrete_marginal_func(beta, xrow, beta_position, binary = False, adder = 0, adderBase = 0, overrideBetaModifier = None):
-    newBeta = beta.copy()
+    newXrow = xrow.copy()
+    oneXrow = xrow.copy()
     if overrideBetaModifier is None:
-        newBeta[beta_position] = 0
-    else:
-        binary = True
-    projection0 = np.dot(newBeta, xrow) + adderBase
-    projection1 = np.dot(beta, xrow) + adder
+        newXrow[beta_position] = 0
+        oneXrow[beta_position] = 1
+        binary = True        
+    projection0 = np.dot(beta, newXrow) + adderBase
+    projection1 = np.dot(beta, oneXrow) + adder
     div = 1 if binary else xrow[beta_position]
+    if div == 0:
+        return np.nan
     marginal = (expit(projection1) - expit(projection0)) / div
     return marginal
 
@@ -32,7 +35,7 @@ def marginalize(xrow, beta, beta_position, discrete=False):
 
 def marginalize_cj(xrow, beta, cjValue, discrete=False):
     if discrete:
-        return np.array([ discrete_marginal_func(beta, xrow[i], 0, adder=cjValue, overrideBetaModifier=True) for i in range(len(xrow)) ]).mean()
+        return np.array([ discrete_marginal_func(beta, xrow[i], 0, adder=cjValue, overrideBetaModifier=True, binary=True) for i in range(len(xrow)) ]).mean()
     return np.array([ marginal_func(beta, xrow[i], 0, adder=cjValue, multiplierOverride=cjValue) for i in range(len(xrow)) ]).mean()
 
 def marginalize_df(df, beta, columns, discrete=False):
