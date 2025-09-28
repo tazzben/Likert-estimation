@@ -48,7 +48,7 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
             'question': question,
             'lower_bound': lower_bound,
             'upper_bound': upper_bound,
-            'p_value': p_value
+            'p_value': p_value * 2
         })
 
     for col in columns:
@@ -61,7 +61,7 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
             'variable': col,
             'lower_bound': lower_bound,
             'upper_bound': upper_bound,
-            'p_value': p_value
+            'p_value': p_value * 2
         })
     cj_results = pd.DataFrame(cj_list)
     beta_results = pd.DataFrame(beta_list)
