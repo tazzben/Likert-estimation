@@ -5,11 +5,11 @@ This estimator is a expansion of the estimators described in the following paper
 
 Smith, B. O., & Wooten, J. J. (2023). Assessing proxies of knowledge and difficulty with rubric-based instruments. Southern Economic Journal, 90(2), 510–534. https://doi.org/10.1002/soej.12658
 
-Smith, B. O. and Wooten, J. J., (2024 - Working Paper). Are Students Sexist when Rating Each Other? Bias in Peer Ratings and a Generalization of the Rubric-Based Estimator. Available at SSRN: https://dx.doi.org/10.2139/ssrn.4858815
+Smith, B. O., & Wooten, J. J., (2024 - Working Paper). Are Students Sexist when Rating Each Other? Bias in Peer Ratings and a Generalization of the Rubric-Based Estimator. Available at SSRN: https://dx.doi.org/10.2139/ssrn.4858815
 
 These papers focus on the use of this estimator in educational settings.  This paper and software allow the bottom box to have different probabilities of success than the middle boxes thus making it more suitable for Likert scale data.  This estimator and an application is described in a upcoming paper:
 
-Smith, B. O., Klucarova, S., and Wooten, J. J., (2025 - Working Paper) What Advertising Techniques of Microtransit Result in Increased Extensive Margin Stated Preference to Use Transit: An Application of a New Estimation Technique. 
+Smith, B. O., Klucarova, S., & Wooten, J. J., (2025 - Working Paper) What Advertising Techniques of Microtransit Result in Increased Extensive Margin Stated Preference to Use Transit: An Application of a New Estimation Technique. 
 
 This new estimator is not a replacement for ordered logit or probit models.  It is a different way of looking at the data that may be more suitable in some settings. 
 

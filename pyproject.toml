@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "SurvivalScale"
-version = "0.0.4"
+version = "0.0.5"
 description = "Package to compute survival scale estimates."
 license = "MIT"
 authors = [
@@ -20,6 +20,7 @@ keywords = ["Survey", "Statistics", "Bootstrap"]
 classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.10",
