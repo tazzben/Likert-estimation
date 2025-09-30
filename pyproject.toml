@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "SurvivalScale"
-version = "0.0.5"
+version = "0.0.6"
 description = "Package to compute survival scale estimates."
 license = "MIT"
 authors = [
@@ -36,5 +36,5 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://github.com/tazzben/Likert-estimation""
+"Homepage" = "https://github.com/tazzben/Likert-estimation"
 "Bug Tracker" = "https://github.com/tazzben/Likert-estimation/issues"
