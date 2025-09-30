@@ -1,4 +1,5 @@
-# Likert-estimation
+# Survival Scale Likert-estimation 
+
 This estimator is used with survey data measured using Likert scales as the dependent variable. It envisions the Likert scale as a series of trials where each trial has a probability of success characterized by a set of features on a logit scale. This approach allows the bottom and top box of the Likert scale to have different probabilities of success (censoring) than the middle boxes.  This model is capturing the idea that very unhappy and very happy respondents represent a much more extreme position than those in the middle of the scale.
 
 This estimator is a expansion of the estimators described in the following papers:
@@ -9,10 +10,9 @@ Smith, B. O., & Wooten, J. J., (2024 - Working Paper). Are Students Sexist when 
 
 These papers focus on the use of this estimator in educational settings.  This paper and software allow the bottom box to have different probabilities of success than the middle boxes thus making it more suitable for Likert scale data.  This estimator and an application is described in a upcoming paper:
 
-Smith, B. O., Klucarova, S., & Wooten, J. J., (2025 - Working Paper) What Advertising Techniques of Microtransit Result in Increased Extensive Margin Stated Preference to Use Transit: An Application of a New Estimation Technique. 
+Smith, B. O., Klucarova, S., & Wooten, J. J., (2025 - Working Paper) What Advertising Techniques Increase Stated Preference for Microtransit: An Application of a New Estimation Technique. 
 
 This new estimator is not a replacement for ordered logit or probit models.  It is a different way of looking at the data that may be more suitable in some settings. 
-
 
 ## Example
 ```python
