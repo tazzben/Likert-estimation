@@ -1,4 +1,4 @@
-# Survival Scale Likert-estimation 
+# Estimate Likert-based Items with Survival Scale
 
 This estimator is used with survey data measured using Likert scales as the dependent variable. It envisions the Likert scale as a series of trials where each trial has a probability of success characterized by a set of features on a logit scale. This approach allows the bottom and top box of the Likert scale to have different probabilities of success (censoring) than the middle boxes.  This model is capturing the idea that very unhappy and very happy respondents represent a much more extreme position than those in the middle of the scale.
 
