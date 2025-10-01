@@ -68,10 +68,17 @@ def solver(pdData, columns = None):
 
 def restricted_solver(pdData):
     data = pdData[['k', 'question', 'bound']].copy()
-    data['question'] = 1
-    numpyArray = data.to_numpy()
-    cjLength = 1
-    initial_guess = np.array((1 / (2 * pdData['k'].mean()),) * (cjLength), np.dtype(float))
+    data['question_id'], unique_questions = data['question'].factorize()
+    data['ones'] = 1
+
+    cjLength = len(unique_questions)
+    initial_guess = np.array((1 / (2 * pdData['k'].mean()),) * (cjLength + 1), np.dtype(float))
+    
+    numpyArray = np.hstack((
+        data[['k', 'question_id', 'bound']].to_numpy(),
+        data[['ones']].to_numpy()
+    ))
+    
     minimum = minimize(
         objective_function,
         initial_guess,
