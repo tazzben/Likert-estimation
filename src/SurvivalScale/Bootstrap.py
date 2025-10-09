@@ -14,7 +14,7 @@ def bootstrap_iteration(tup):
         sampled_blocks = np.random.choice(unique_blocks, size=len(unique_blocks), replace=True)
         sample_data = pd.concat([pdData[pdData[block_id] == block] for block in sampled_blocks])
     sample_data = sample_data.reset_index(drop=True)
-    cols = [col for col in columns if sample_data[col].sum() != 0]
+    cols = [col for col in columns if (sample_data[col].sum() != 0 or sample_data[col].nunique() > 1)]
     cjResults, solvedParams, _, _ = solver(sample_data, cols)
     cjResults = cjResults.reset_index()
     solvedParams = solvedParams.reset_index()
