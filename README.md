@@ -21,3 +21,15 @@ from SurvivalScale import get_results
 cj, beta, metrics = get_results(data, bootstrap_iterations=1000, alpha=0.05, columns=['feature1', 'feature2'], block_id='block')
 ```
 
+## Installation
+
+You can install the package from either PyPI or the Conda repository:
+
+```console
+pip install SurvivalScale
+```
+or
+
+```console
+conda install -c tazzben survivalscale
+```
