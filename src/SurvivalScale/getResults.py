@@ -61,6 +61,7 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     # Solve the model
     cj, beta, fun, parlen = solver(data, columns=columns)
     cj.index.name = None
+    cjLen = len(cj)
     # Marginalize the results
     marginals = marginalize_df(data, beta, columns=columns, discrete=False)
     marginalD = marginalize_df(data, beta, columns=columns, discrete=True)
@@ -90,7 +91,7 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
         'LR': -2 * (restrictedFun - fun)
     }
     metrics['num_rows'] = data.shape[0]
-    metrics['Chi-Squared_p-value'] = chi2.sf(metrics['LR'], (parlen - 1))
+    metrics['Chi-Squared_p-value'] = chi2.sf(metrics['LR'], (parlen - cjLen - 1))
     metrics['AIC'] = 2*(parlen)-2*fun
     metrics['BIC'] = (parlen) * np.log(metrics['num_rows'])-2*fun
 
