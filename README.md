@@ -10,7 +10,7 @@ Smith, B. O., & Wooten, J. J., (2024 - Working Paper). Are Students Sexist when 
 
 These papers focus on the use of this estimator in educational settings.  This paper and software allow the bottom box to have different probabilities of success than the middle boxes thus making it more suitable for Likert scale data.  This estimator and an application is described in a upcoming paper:
 
-Smith, B. O., Klucarova, S., & Wooten, J. J., (2025 - Working Paper) What Advertising Techniques Increase Stated Preference for Microtransit: An Application of a New Estimation Technique. 
+Smith, B. O., Klucarova, S., & Wooten, J. J., (2025 - Working Paper) What Advertising Techniques Increase Stated Preference for Microtransit: An Application of a New Estimation Technique. Available on SSRN: https://papers.ssrn.com/abstract=5759902
 
 This new estimator is not a replacement for ordered logit or probit models.  It is a different way of looking at the data that may be more suitable in some settings. 
 
