@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from .Solver import solver
+from scipy.special import expit # pylint: disable = no-name-in-module
 
 
 def bootstrap_iteration(tup):
@@ -66,3 +67,59 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
     cj_results = pd.DataFrame(cj_list)
     beta_results = pd.DataFrame(beta_list)
     return cj_results, beta_results
+
+def findFailureBin(cjprob, nocjprob, bound):
+    if np.random.random() < cjprob:
+        return 0
+    for bin in range(1, bound + 1):   
+        if np.random.random() < nocjprob:
+            return bin
+    return bound
+
+def parametric_bootstrap_iteration(tup):
+    columns, pdData = tup
+    ystars = []
+    for _, row in pdData.iterrows():
+        ystar = findFailureBin(row['expit_projection_cj'], row['expit_projection_nocj'], row['bound'])
+        ystars.append(ystar)
+    pdData = pdData.copy()
+    pdData['k'] = ystars
+    cjResults, solvedParams, _, _ = solver(pdData, columns)
+    cjResults = cjResults.reset_index()
+    solvedParams = solvedParams.reset_index()
+    return cjResults, solvedParams
+ 
+def parametric_bootstrap_correction(pdData, betas, cjs, columns=None, n_bootstraps=1000, alpha=0.05):
+    pbData = pdData.copy()
+    if not columns:
+        columns = pbData.columns[3:]
+        columns = list(columns)
+    betas_numpy = betas.loc[columns,'beta'].to_numpy()
+    xrows = pbData[columns].to_numpy()
+    projection_nocj = np.dot(xrows, betas_numpy)
+    pbData['projection_nocj'] = projection_nocj
+    cjsdata = cjs.reset_index()
+    pbData = pbData.merge(cjsdata, on='question', how='left')
+    pbData['projection_cj'] = pbData['projection_nocj'] + pbData['Cj']
+    pbData['expit_projection_cj'] = expit(pbData['projection_cj'])
+    pbData['expit_projection_nocj'] = expit(pbData['projection_nocj'])
+
+    rows = [(columns, pbData) for _ in range(n_bootstraps)]
+
+    with Pool() as pool:
+        results = list(tqdm(pool.imap(parametric_bootstrap_iteration, rows), total=n_bootstraps))
+    
+        # Combine results from all iterations
+    cj_results = pd.concat([result[0] for result in results], axis=0, ignore_index=True)
+    beta_results = pd.concat([result[1] for result in results], axis=0, ignore_index=True)
+
+    unique_questions = cj_results['question'].unique()
+
+    cj_list = []
+    beta_list = []
+
+    for col in columns:
+        col_mask = beta_results['index'] == col
+        bias = (beta_results[col_mask]['beta'] - betas.loc[col, 'beta']).mean()
+    
+    
