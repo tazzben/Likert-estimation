@@ -70,16 +70,17 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     marginalD = marginalD.rename(columns={'marginal': 'marginal_discrete'})
     results = results.join(marginalD, how='inner')
     # Perform parametric bootstrap if specified
+    cj_corrected = None
+    beta_corrected = None
     if parametric_bootstrap:
-        #pdData, betas, cjs, columns=None, n_bootstraps=1000
         cj_corrected, beta_corrected = parametric_bootstrap_correction(data, beta, cj, columns=columns, n_bootstraps=bootstrap_iterations)
-        print("CjCorrected:") 
-        print(cj_corrected)
-        print("BetaCorrected:")
-        print(beta_corrected)
     
     # Perform bootstrap analysis
-    cjbootstrap, bootstrap_results = bootstrap(data, n_bootstraps=bootstrap_iterations, alpha=alpha, columns=columns, block_id=block_id)
+    cjbootstrap, bootstrap_results = bootstrap(data, n_bootstraps=bootstrap_iterations, 
+                                               alpha=alpha, columns=columns, 
+                                               block_id=block_id,
+                                               cj_corrected=cj_corrected, 
+                                               beta_corrected=beta_corrected)
     cjbootstrap = cjbootstrap.set_index('question')
     bootstrap_results = bootstrap_results.set_index('variable')
     results = results.join(bootstrap_results, how='inner')

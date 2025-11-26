@@ -22,7 +22,7 @@ def bootstrap_iteration(tup):
     solvedParams = solvedParams.reset_index()
     return cjResults, solvedParams
 
-def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None):
+def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None, cj_corrected=None, beta_corrected=None):
     if not columns:
         columns = pdData.columns[3:]
         columns = list(columns)
@@ -46,12 +46,19 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
         lower_bound = cj_results[question_mask]['Cj'].quantile(alpha / 2)
         upper_bound = cj_results[question_mask]['Cj'].quantile(1 - alpha / 2)
         p_value = ((cj_results[question_mask]['Cj'] < 0).sum()) / (len(cj_results[question_mask]['Cj'])) if median_cj > 0 else ((cj_results[question_mask]['Cj'] > 0).sum()) / (len(cj_results[question_mask]['Cj']))
-        cj_list.append({
+        d = {
             'question': question,
             'lower_bound': lower_bound,
             'upper_bound': upper_bound,
             'p_value': p_value * 2
-        })
+        }
+        if cj_corrected is not None:
+            cj_results.loc[question_mask, 'Cj_corrected'] = cj_results.loc[question_mask, 'Cj'] - cj_corrected.loc[cj_corrected['question'] == question, 'bias'].to_numpy().item()
+            median_cj_corrected = cj_results.loc[question_mask, 'Cj_corrected'].median()
+            d['corrected_lower_bound'] = lower_bound - cj_corrected.loc[cj_corrected['question'] == question, 'bias'].to_numpy().item()
+            d['corrected_upper_bound'] = upper_bound - cj_corrected.loc[cj_corrected['question'] == question, 'bias'].to_numpy().item()
+            d['corrected_p_value'] = 2*(((cj_results.loc[question_mask, 'Cj_corrected'] < 0).sum()) / (len(cj_results.loc[question_mask, 'Cj_corrected'])) if median_cj_corrected > 0 else ((cj_results.loc[question_mask, 'Cj_corrected'] > 0).sum()) / (len(cj_results.loc[question_mask, 'Cj_corrected'])))
+        cj_list.append(d)
 
     for col in columns:
         col_mask = beta_results['index'] == col
@@ -59,12 +66,19 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
         lower_bound = beta_results[col_mask]['beta'].quantile(alpha / 2)
         upper_bound = beta_results[col_mask]['beta'].quantile(1 - alpha / 2)
         p_value = ((beta_results[col_mask]['beta'] < 0).sum()) / (len(beta_results[col_mask]['beta'])) if median_beta > 0 else ((beta_results[col_mask]['beta'] > 0).sum()) / (len(beta_results[col_mask]['beta']))
-        beta_list.append({
+        d = {
             'variable': col,
             'lower_bound': lower_bound,
             'upper_bound': upper_bound,
             'p_value': p_value * 2
-        })
+        }
+        if beta_corrected is not None:
+            beta_results.loc[col_mask, 'beta_corrected'] = beta_results.loc[col_mask, 'beta'] - beta_corrected.loc[beta_corrected['variable'] == col, 'bias'].to_numpy().item()
+            median_beta_corrected = beta_results.loc[col_mask, 'beta_corrected'].median()
+            d['corrected_lower_bound'] = lower_bound - beta_corrected.loc[beta_corrected['variable'] == col, 'bias'].to_numpy().item()
+            d['corrected_upper_bound'] = upper_bound - beta_corrected.loc[beta_corrected['variable'] == col, 'bias'].to_numpy().item()
+            d['corrected_p_value'] = 2*(((beta_results.loc[col_mask, 'beta_corrected'] < 0).sum()) / (len(beta_results.loc[col_mask, 'beta_corrected'])) if median_beta_corrected > 0 else ((beta_results.loc[col_mask, 'beta_corrected'] > 0).sum()) / (len(beta_results.loc[col_mask, 'beta_corrected'])))   
+        beta_list.append(d)
     cj_results = pd.DataFrame(cj_list)
     beta_results = pd.DataFrame(beta_list)
     return cj_results, beta_results
