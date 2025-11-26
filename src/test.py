@@ -13,7 +13,7 @@ def testFunction():
         'feature4': [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 0],
         'block': [1, 1, 1, 1, 1, 2, 2, 'test', 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4]
     })
-    cj, beta, metrics = s.get_results(data, bootstrap_iterations=5234, alpha=0.05, columns=['feature1', 'feature2', 'feature3', 'feature4', 'block'], block_id='block')
+    cj, beta, metrics = s.get_results(data, bootstrap_iterations=5234, alpha=0.05, columns=['feature1', 'feature2', 'feature3', 'feature4', 'block'], block_id='block', parametric_bootstrap=True)
     print("Cj DataFrame:")
     print(cj)
     print("\nBeta DataFrame:")

@@ -3,12 +3,12 @@ import pandas as pd
 from scipy.stats.distributions import chi2
 from .Solver import solver, restricted_solver
 from .Marginal import marginalize_df, marginalize_cjdf
-from .Bootstrap import bootstrap
+from .Bootstrap import bootstrap, parametric_bootstrap_correction
 
 def compareKBound(x):
     return pd.to_numeric(x, downcast='integer')
 
-def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block_id=None):
+def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block_id=None, parametric_bootstrap=False):
     """
     Get the results of the SurvivalScale analysis.
 
@@ -69,6 +69,15 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     results = beta.join(marginals, how='inner')
     marginalD = marginalD.rename(columns={'marginal': 'marginal_discrete'})
     results = results.join(marginalD, how='inner')
+    # Perform parametric bootstrap if specified
+    if parametric_bootstrap:
+        #pdData, betas, cjs, columns=None, n_bootstraps=1000
+        cj_corrected, beta_corrected = parametric_bootstrap_correction(data, beta, cj, columns=columns, n_bootstraps=bootstrap_iterations)
+        print("CjCorrected:") 
+        print(cj_corrected)
+        print("BetaCorrected:")
+        print(beta_corrected)
+    
     # Perform bootstrap analysis
     cjbootstrap, bootstrap_results = bootstrap(data, n_bootstraps=bootstrap_iterations, alpha=alpha, columns=columns, block_id=block_id)
     cjbootstrap = cjbootstrap.set_index('question')

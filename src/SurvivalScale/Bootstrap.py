@@ -4,6 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 from .Solver import solver
 from scipy.special import expit # pylint: disable = no-name-in-module
+from numba import njit
 
 
 def bootstrap_iteration(tup):
@@ -68,20 +69,20 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
     beta_results = pd.DataFrame(beta_list)
     return cj_results, beta_results
 
-def findFailureBin(cjprob, nocjprob, bound):
-    if np.random.random() < cjprob:
+
+@njit
+def findFailureBin(cjprob, nocjprob, bound, rng):
+    if rng.random() < cjprob:
         return 0
     for bin in range(1, bound + 1):   
-        if np.random.random() < nocjprob:
+        if rng.random() < nocjprob:
             return bin
     return bound
 
 def parametric_bootstrap_iteration(tup):
     columns, pdData = tup
-    ystars = []
-    for _, row in pdData.iterrows():
-        ystar = findFailureBin(row['expit_projection_cj'], row['expit_projection_nocj'], row['bound'])
-        ystars.append(ystar)
+    rng = np.random.default_rng()
+    ystars = [findFailureBin(row['expit_projection_cj'], row['expit_projection_nocj'], int(row['bound']), rng) for _, row in pdData.iterrows()]
     pdData = pdData.copy()
     pdData['k'] = ystars
     cjResults, solvedParams, _, _ = solver(pdData, columns)
@@ -89,8 +90,10 @@ def parametric_bootstrap_iteration(tup):
     solvedParams = solvedParams.reset_index()
     return cjResults, solvedParams
  
-def parametric_bootstrap_correction(pdData, betas, cjs, columns=None, n_bootstraps=1000):
+def parametric_bootstrap_correction(pdData, betasO, cjsO, columns=None, n_bootstraps=1000):
     pbData = pdData.copy()
+    betas = betasO.copy()
+    cjs = cjsO.copy()
     if not columns:
         columns = pbData.columns[3:]
         columns = list(columns)
@@ -98,6 +101,7 @@ def parametric_bootstrap_correction(pdData, betas, cjs, columns=None, n_bootstra
     xrows = pbData[columns].to_numpy()
     projection_nocj = np.dot(xrows, betas_numpy)
     pbData['projection_nocj'] = projection_nocj
+    cjs.index.name = 'question'
     cjsdata = cjs.reset_index()
     pbData = pbData.merge(cjsdata, on='question', how='left')
     pbData['projection_cj'] = pbData['projection_nocj'] + pbData['Cj']
@@ -121,11 +125,12 @@ def parametric_bootstrap_correction(pdData, betas, cjs, columns=None, n_bootstra
     for question in unique_questions:
         question_mask = cj_results['question'] == question
         cjStar = cj_results[question_mask]['Cj'].mean()
-        bias = cjStar - cjs.loc[question, 'Cj']
+        bias = cjStar - cjs.loc[question]
         cj_list.append({
             'question': question,
             'bias': bias,
-            'corrected_Cj': cjs.loc[question, 'Cj'] - bias
+            'cJ': cjStar,
+            'corrected_Cj': cjs.loc[question] - bias
         })
 
     for col in columns:
@@ -135,6 +140,7 @@ def parametric_bootstrap_correction(pdData, betas, cjs, columns=None, n_bootstra
         beta_list.append({
             'variable': col,
             'bias': bias,
+            'beta': betaStar,
             'corrected_beta': betas.loc[col, 'beta'] - bias
         })
     
