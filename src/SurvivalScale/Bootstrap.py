@@ -89,7 +89,7 @@ def parametric_bootstrap_iteration(tup):
     solvedParams = solvedParams.reset_index()
     return cjResults, solvedParams
  
-def parametric_bootstrap_correction(pdData, betas, cjs, columns=None, n_bootstraps=1000, alpha=0.05):
+def parametric_bootstrap_correction(pdData, betas, cjs, columns=None, n_bootstraps=1000):
     pbData = pdData.copy()
     if not columns:
         columns = pbData.columns[3:]
@@ -108,8 +108,8 @@ def parametric_bootstrap_correction(pdData, betas, cjs, columns=None, n_bootstra
 
     with Pool() as pool:
         results = list(tqdm(pool.imap(parametric_bootstrap_iteration, rows), total=n_bootstraps))
-    
-        # Combine results from all iterations
+
+    # Combine results from all iterations
     cj_results = pd.concat([result[0] for result in results], axis=0, ignore_index=True)
     beta_results = pd.concat([result[1] for result in results], axis=0, ignore_index=True)
 
@@ -118,8 +118,27 @@ def parametric_bootstrap_correction(pdData, betas, cjs, columns=None, n_bootstra
     cj_list = []
     beta_list = []
 
+    for question in unique_questions:
+        question_mask = cj_results['question'] == question
+        cjStar = cj_results[question_mask]['Cj'].mean()
+        bias = cjStar - cjs.loc[question, 'Cj']
+        cj_list.append({
+            'question': question,
+            'bias': bias,
+            'corrected_Cj': cjs.loc[question, 'Cj'] - bias
+        })
+
     for col in columns:
         col_mask = beta_results['index'] == col
-        bias = (beta_results[col_mask]['beta'] - betas.loc[col, 'beta']).mean()
+        betaStar = beta_results[col_mask]['beta'].mean()
+        bias = betaStar - betas.loc[col, 'beta']
+        beta_list.append({
+            'variable': col,
+            'bias': bias,
+            'corrected_beta': betas.loc[col, 'beta'] - bias
+        })
     
+    cj_results = pd.DataFrame(cj_list)
+    beta_results = pd.DataFrame(beta_list)
+    return cj_results, beta_results
     
