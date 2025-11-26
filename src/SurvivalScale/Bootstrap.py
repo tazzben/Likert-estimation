@@ -70,18 +70,19 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
     return cj_results, beta_results
 
 
-# @njit
-def findFailureBin(cjprob, nocjprob, bound):
-    if np.random.choice([1, 0], p=[cjprob, 1-cjprob]) == 1:
+@njit
+def findFailureBin(cjprob, nocjprob, bound, rng):
+    if rng.random() < cjprob:
         return 0
     for bin in range(1, bound + 1):   
-        if np.random.choice([1, 0], p=[nocjprob, 1-nocjprob]) == 1:
+        if rng.random() < nocjprob:
             return bin
     return bound
 
 def parametric_bootstrap_iteration(tup):
     columns, pdData = tup
-    ystars = [findFailureBin(row['expit_projection_cj'], row['expit_projection_nocj'], int(row['bound'])) for _, row in pdData.iterrows()]
+    rng = np.random.default_rng()
+    ystars = [findFailureBin(row['expit_projection_cj'], row['expit_projection_nocj'], int(row['bound']), rng) for _, row in pdData.iterrows()]
     pdData = pdData.copy()
     pdData['k'] = ystars
     cjResults, solvedParams, _, _ = solver(pdData, columns)
