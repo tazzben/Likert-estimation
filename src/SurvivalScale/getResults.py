@@ -8,7 +8,7 @@ from .Bootstrap import bootstrap, parametric_bootstrap_correction
 def compareKBound(x):
     return pd.to_numeric(x, downcast='integer')
 
-def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block_id=None, parametric_bootstrap=False):
+def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block_id=None, parametric_bootstrap=False, test_cj_difference=False):
     """
     Get the results of the SurvivalScale analysis.
 
@@ -20,6 +20,7 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     - alpha (float, optional): The significance level for the bootstrap confidence intervals. Default is 0.05.
     - block_id (str, optional): The column name to use for blocking in the bootstrap analysis. Default is None.
     - parametric_bootstrap (bool, optional): Whether to perform parametric bootstrap correction. Default is False.
+    - test_cj_difference (bool, optional): Whether to test for differences in Cj values across questions. Default is False.
 
     Returns:
     - pd.DataFrame: question-level results (Cj values).
@@ -68,6 +69,7 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     cj_corrected = None
     beta_corrected = None
     if parametric_bootstrap:
+        print("Performing parametric bootstrap to estimate incidental variable bias correction...")
         cj_corrected, beta_corrected = parametric_bootstrap_correction(data, beta, cj, columns=columns, n_bootstraps=bootstrap_iterations)
         cj_correctedforMarginal = cj_corrected.set_index('question').drop(columns=['cJ']).rename(columns={'corrected_Cj': 'cj'})['cj']
         cj_correctedforMarginal.index.name = None
@@ -127,6 +129,7 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
         cj = cj.join(cjmarginalsD_corrected, how='inner')
     
     # Perform bootstrap analysis
+    print("Performing bootstrap analysis to estimate confidence intervals and p-values...")
     cjbootstrap, bootstrap_results = bootstrap(data, n_bootstraps=bootstrap_iterations, 
                                                alpha=alpha, columns=columns, 
                                                block_id=block_id,
@@ -150,6 +153,12 @@ def get_results(data, columns=None, bootstrap_iterations=1000, alpha=0.05, block
     metrics['Chi-Squared_p-value'] = chi2.sf(metrics['LR'], (parlen - cjLen - 1))
     metrics['AIC'] = 2*(parlen)-2*fun
     metrics['BIC'] = (parlen) * np.log(metrics['num_rows'])-2*fun
+
+    if test_cj_difference and cjLen >=2:
+        data['question'] = 1
+        _, _, funT, parlenT = solver(data, columns=columns)
+        metrics['CJ_Difference_LR'] = -2 * (funT - fun)
+        metrics['CJ_Difference_p-value'] = chi2.sf(metrics['CJ_Difference_LR'], (parlen - parlenT))
 
     # Create a clean pandas DataFrame from metrics
     metrics_df = pd.DataFrame(list(metrics.items()), columns=['Metric', 'Value'])
