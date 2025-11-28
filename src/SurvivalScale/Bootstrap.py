@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 from .Solver import solver
 from scipy.special import expit # pylint: disable = no-name-in-module
-from numba import njit, jit
+from numba import njit
 
 def bootstrap_iteration(tup):
     block_id, columns, pdData = tup
@@ -110,10 +110,10 @@ class BulkRNG:
 
 def parametric_bootstrap_iteration(tup):
     columns, pdData = tup
-    num_rows = pdData.shape[0]
-    max_bound = pdData['bound'].max()
-    rng = BulkRNG(int(num_rows * max_bound / 2), np.random.default_rng())
-    ystars = np.empty(num_rows, dtype=np.int32)
+    num_rows = int(pdData.shape[0])
+    max_bound = int(pdData['bound'].max())
+    rng = BulkRNG(int(num_rows * max_bound / 1.5), np.random.default_rng())
+    ystars = np.empty(num_rows, dtype=np.int8) if max_bound < 128 else np.empty(num_rows, dtype=np.int16) if max_bound < 32768 else np.empty(num_rows, dtype=np.int32)
     for i in range(num_rows):
         ystars[i] = findFailureBin(pdData['expit_projection_cj'].iat[i], pdData['expit_projection_nocj'].iat[i], int(pdData['bound'].iat[i]), rng)
     del rng
