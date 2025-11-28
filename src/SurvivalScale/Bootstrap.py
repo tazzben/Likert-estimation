@@ -4,8 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 from .Solver import solver
 from scipy.special import expit # pylint: disable = no-name-in-module
-from numba import njit
-
+from numba import njit, jit
 
 def bootstrap_iteration(tup):
     block_id, columns, pdData = tup
@@ -84,19 +83,40 @@ def bootstrap(pdData, columns=None, n_bootstraps=1000, alpha=0.05, block_id=None
     return cj_results, beta_results
 
 
-@njit
 def findFailureBin(cjprob, nocjprob, bound, rng):
     if rng.random() < cjprob:
         return 0
-    for bin in range(1, bound + 1):   
+    for bin in range(1, bound + 1):
         if rng.random() < nocjprob:
             return bin
     return bound
 
+@njit
+def bulk_random_generator(chunk_size, rng):
+    buf = np.empty(0, dtype=np.float64)
+    idx = 0
+    while True:
+        if idx >= buf.size:
+            buf = rng.random(chunk_size)
+            idx = 0
+        yield float(buf[idx])
+        idx += 1
+
+class BulkRNG:
+    def __init__(self, chunk_size, rng):
+        self._gen = bulk_random_generator(chunk_size, rng)
+    def random(self):
+        return next(self._gen)
+
 def parametric_bootstrap_iteration(tup):
     columns, pdData = tup
-    rng = np.random.default_rng()
-    ystars = [findFailureBin(row['expit_projection_cj'], row['expit_projection_nocj'], int(row['bound']), rng) for _, row in pdData.iterrows()]
+    num_rows = pdData.shape[0]
+    max_bound = pdData['bound'].max()
+    rng = BulkRNG(int(num_rows * max_bound / 2), np.random.default_rng())
+    ystars = np.empty(num_rows, dtype=np.int32)
+    for i in range(num_rows):
+        ystars[i] = findFailureBin(pdData['expit_projection_cj'].iat[i], pdData['expit_projection_nocj'].iat[i], int(pdData['bound'].iat[i]), rng)
+    del rng
     pdData = pdData.copy()
     pdData['k'] = ystars
     cjResults, solvedParams, _, _ = solver(pdData, columns)
