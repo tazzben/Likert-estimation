@@ -22,11 +22,36 @@ def _oneExpitRow(row_data):
     fourthPos = 1 if row_data[0] in (0, int(row_data[1])) else row_data[3]
     return [ firstPos, secondPos, row_data[0] - 1, thirdPos, fourthPos ]
 
+@njit
+def _computeExpitRows(cleanedExpitProjections):
+    n_rows = cleanedExpitProjections.shape[0]
+    formulaPosArray = np.empty((n_rows, 5), dtype=np.float64)
+    for i in range(n_rows):
+        result = _oneExpitRow(cleanedExpitProjections[i])
+        formulaPosArray[i, 0] = result[0]
+        formulaPosArray[i, 1] = result[1]
+        formulaPosArray[i, 2] = result[2]
+        formulaPosArray[i, 3] = result[3]
+        formulaPosArray[i, 4] = result[4]
+    return formulaPosArray
+
+@njit
+def _computeProjections(params, data, cjLength):
+    n_rows = data.shape[0]
+    projectionsData = np.empty((n_rows, 4), dtype=np.float64)
+    for i in range(n_rows):
+        result = _oneRow(params, data[i], cjLength)
+        projectionsData[i, 0] = result[0]
+        projectionsData[i, 1] = result[1]
+        projectionsData[i, 2] = result[2]
+        projectionsData[i, 3] = result[3]
+    return projectionsData
+
 def objective_function(params, data, cjLength):
-    projectionsData = np.apply_along_axis(lambda row_data: _oneRow(params, row_data, cjLength), 1, data)
+    projectionsData = _computeProjections(params, data, cjLength)
     projectionsData = np.array(projectionsData, dtype=np.float64)
     cleanedExpitProjections = np.hstack((projectionsData[:, [2, 3]], expit(projectionsData[:, [0, 1]])))
-    formulaPosArray = np.apply_along_axis(_oneExpitRow, 1, cleanedExpitProjections)
+    formulaPosArray = _computeExpitRows(cleanedExpitProjections)
     formulaPosArray = np.hstack((
         xlogy(1, formulaPosArray[:, [0, 1, 4]]),
         xlogy(formulaPosArray[:, 2], formulaPosArray[:, 3]).reshape(-1, 1)
